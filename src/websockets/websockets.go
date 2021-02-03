@@ -10,17 +10,18 @@ import (
 
 
 type KafkaWebsocketServer struct {
-  Topic_chans map[string]chan *kafka.Message
+  TopicChans  map[string]chan *kafka.Message
+  Port        string
 }
 
 func (ws *KafkaWebsocketServer)ListenAndServe() {
 
-  for t, c := range ws.Topic_chans {
+  for t, c := range ws.TopicChans {
 
     http.HandleFunc("/" + t, readAndBroadcastKafkaTopic(c))
   }
 
-  log.Fatal(http.ListenAndServe(":8080", nil))
+  log.Fatal(http.ListenAndServe(":" + ws.Port, nil))
 }
 
 

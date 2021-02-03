@@ -6,13 +6,16 @@ import (
 
 
 type KafkaTopicConsumer struct {
-  Topic_name    string
-  Topic_chan    chan *kafka.Message
+  TopicName   string
+  TopicChan   chan *kafka.Message
+
+  BrokerURL   string
 }
 
 func (k *KafkaTopicConsumer)ConsumeAndBroadcastTopics() {
-  c, err := kafka.NewConsumer(&kafka.ConfigMap{
-    "bootstrap.servers": "kafka:9092",
+
+  consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+    "bootstrap.servers": k.BrokerURL,
 		"group.id":          "websocket-api-group",
 		"auto.offset.reset": "latest",
 	})
@@ -20,17 +23,17 @@ func (k *KafkaTopicConsumer)ConsumeAndBroadcastTopics() {
 	if err != nil {
 		panic(err)
 	}
-  defer c.Close()
+  defer consumer.Close()
 
-	c.SubscribeTopics([]string{k.Topic_name}, nil)
+	consumer.SubscribeTopics([]string{k.TopicName}, nil)
 
   for {
-    msg, err := c.ReadMessage(-1)
+    msg, err := consumer.ReadMessage(-1)
 		if err == nil {
 
       // NOTE: use select statement for non-blocking channels
       select {
-      case k.Topic_chan <- msg:
+      case k.TopicChan <- msg:
       default:
       }
     }

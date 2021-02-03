@@ -1,6 +1,7 @@
 package main
 
 import (
+  "log"
   "os"
   "strings"
 
@@ -12,10 +13,23 @@ import (
 
 func main() {
 
-  // comma seperated list of topic names to serve
-  topics_env_raw := os.Getenv("WEBSOCKET_API_TOPICS")
+  topics_env := os.Getenv("WEBSOCKET_API_TOPICS")
+  broker_url_env := os.Getenv("WEBSOCKET_API_BROKER_URL")
+  port_env := os.Getenv("WEBSOCKET_API_PORT")
 
-  topic_names := strings.Split(topics_env_raw, ",")
+  if topics_env == "" {
+    log.Println("ERROR: required enviroment variable missing: WEBSOCKET_API_TOPICS")
+    return
+  }
+  if broker_url_env == "" {
+    log.Println("ERROR: required enviroment variable missing: WEBSOCKET_API_BROKER_URL")
+    return
+  }
+  if port_env == "" {
+    port_env = "8080"
+  }
+
+  topic_names := strings.Split(topics_env, ",")
   topic_chans := make(map[string]chan *kafka.Message)
 
   for _, topic := range topic_names {
@@ -26,6 +40,7 @@ func main() {
     kafka_consumer := consumer.KafkaTopicConsumer{
       topic,
       topic_chans[topic],
+      broker_url_env,
     }
 
     // Start consumer
@@ -35,6 +50,7 @@ func main() {
   // Create server
   websocket_server := websockets.KafkaWebsocketServer{
     topic_chans,
+    port_env,
   }
 
   // Start server
