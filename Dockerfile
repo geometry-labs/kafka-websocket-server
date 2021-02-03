@@ -6,16 +6,12 @@ ENV GO111MODULE=on \
     GOOS=linux \
     GOARCH=amd64
 
-# GO BUILD PREP
+# COPY SRC
 WORKDIR /build
+COPY ./src .
 
-COPY ./app .
-RUN go mod init websocket-api && go mod tidy
-
-# DO GO BUILD
+# BUILD
 RUN go build -o main .
-WORKDIR /dist
-RUN cp /build/main .
 
 FROM ubuntu
 COPY --from=builder /build/main /

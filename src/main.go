@@ -6,8 +6,8 @@ import (
 
   "gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 
-  "websocket-api/consumer"
-  "websocket-api/websockets"
+  "kafka-websocket-server/consumer"
+  "kafka-websocket-server/websockets"
 )
 
 func main() {
