@@ -1,76 +1,74 @@
 package websockets
 
 import (
-  "log"
-  "net/http"
+	"log"
+	"net/http"
 
-  "gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
-  "github.com/gorilla/websocket"
+	"github.com/gorilla/websocket"
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
-
 type KafkaWebsocketServer struct {
-  TopicChans  map[string]chan *kafka.Message
-  Port        string
+	TopicChans map[string]chan *kafka.Message
+	Port       string
 }
 
-func (ws *KafkaWebsocketServer)ListenAndServe() {
+func (ws *KafkaWebsocketServer) ListenAndServe() {
 
-  for t, c := range ws.TopicChans {
+	for t, c := range ws.TopicChans {
 
-    http.HandleFunc("/" + t, readAndBroadcastKafkaTopic(c))
-  }
+		http.HandleFunc("/"+t, readAndBroadcastKafkaTopic(c))
+	}
 
-  log.Fatal(http.ListenAndServe(":" + ws.Port, nil))
+	log.Fatal(http.ListenAndServe(":"+ws.Port, nil))
 }
-
 
 var upgrader = websocket.Upgrader{
-  CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
 }
 
 func readAndBroadcastKafkaTopic(topic_chan chan *kafka.Message) func(w http.ResponseWriter, r *http.Request) {
 
-  return func(w http.ResponseWriter, r *http.Request) {
-    c, err := upgrader.Upgrade(w, r, nil)
+	return func(w http.ResponseWriter, r *http.Request) {
+		c, err := upgrader.Upgrade(w, r, nil)
 
-    if err != nil {
-      log.Print("upgrade:", err)
-      return
-    }
-    defer c.Close()
+		if err != nil {
+			log.Print("upgrade:", err)
+			return
+		}
+		defer c.Close()
 
-    // Read for close
-    client_close_sig := make(chan bool)
-    go func() {
-      for {
-        _, _, err := c.ReadMessage()
-        if err != nil {
-          client_close_sig <- true
-          break
-        }
-      }
-    }()
+		// Read for close
+		client_close_sig := make(chan bool)
+		go func() {
+			for {
+				_, _, err := c.ReadMessage()
+				if err != nil {
+					client_close_sig <- true
+					break
+				}
+			}
+		}()
 
-    for {
-      // Read
-      msg := <-topic_chan
+		for {
+			// Read
+			msg := <-topic_chan
 
-      // Broadcast
-      err = c.WriteMessage(websocket.TextMessage, msg.Value)
-      if err != nil {
-        break
-      }
+			// Broadcast
+			err = c.WriteMessage(websocket.TextMessage, msg.Value)
+			if err != nil {
+				break
+			}
 
-      // check for client close
-      select {
-      case _ = <-client_close_sig:
-        break
-      default:
-        continue
-      }
-    }
-  }
+			// check for client close
+			select {
+			case _ = <-client_close_sig:
+				break
+			default:
+				continue
+			}
+		}
+	}
 }
