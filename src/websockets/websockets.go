@@ -1,6 +1,9 @@
 package websockets
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -85,21 +88,64 @@ func filterAndBroadcastKafkaTopic(topic_chan chan *kafka.Message) func(w http.Re
 		}
 		defer c.Close()
 
-		// Read for close
+		// Registration id given by the resigtration service
+		// Use for filtering topic messages
+		registration_id := ""
+
+		// Read registration
 		client_close_sig := make(chan bool)
 		go func() {
 			for {
-				_, _, err := c.ReadMessage()
+				_, json_data, err := c.ReadMessage()
+
 				if err != nil {
+					_ = c.WriteMessage(websocket.TextMessage, []byte("Closing websocket"))
+
 					client_close_sig <- true
 					break
 				}
+
+				// Make registration POST request
+				resp, err := http.Post(
+					"registration/register/broadcaster", // NOTE: should be "/broadcaster/register"
+					"application/json",
+					bytes.NewBuffer(json_data),
+				)
+				if err != nil || resp.StatusCode != 200 {
+					_ = c.WriteMessage(websocket.TextMessage, []byte("Error registering events...closing websocket"))
+
+					client_close_sig <- true
+					break
+				}
+
+				var registration_json map[string]interface{}
+				json.NewDecoder(resp.Body).Decode(&registration_json)
+
+				registration_id = registration_json["registration_id"].(string)
+
+				// unregister on disconnect
+				defer func() {
+					unregister_existing_blob_format := `
+						{
+							registration_id: %s
+						}
+					`
+					unregister_existing_blob := fmt.Sprintf(unregister_existing_blob_format, registration_id)
+
+					_, _ = http.Post(
+						"registration/unregister/broadcaster", // NOTE: should be "/broadcaster/unregister"
+						"application/json",
+						bytes.NewBuffer([]byte(unregister_existing_blob)),
+					)
+				}()
 			}
 		}()
 
 		for {
 			// Read
 			msg := <-topic_chan
+
+			// TODO filter registration_id
 
 			// Broadcast
 			err = c.WriteMessage(websocket.TextMessage, msg.Value)
