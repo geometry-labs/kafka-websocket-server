@@ -45,7 +45,7 @@ jobs:
           file: ./Dockerfile
           target: prod
           push: true
-          tags: geometrylabs/icon-filter-registration:${{ steps.source.outputs.TAG }}
+          tags: geometrylabs/kafka-websocket-server:${{ steps.source.outputs.TAG }}
 
 #      - name: Publish package
 #        uses: pypa/gh-action-pypi-publish@master
