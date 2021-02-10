@@ -9,7 +9,7 @@ go build -o main .
 
 ## Docker build
 ```
-docker build . -t kafka-websocket-server:latest
+docker build . -t kafka-websocket-server:latest --target prod
 docker run \
   -p "8080:8080" \
   -e KAFKA_WEBSOCKET_SERVER_TOPICS="blocks,transactions,logs"
