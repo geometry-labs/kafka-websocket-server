@@ -2,6 +2,8 @@
 
 This service can be used alongside any kafka cluster to expose selected topics to a websocket server.
 
+Docker hub [image](https://hub.docker.com/r/pranavt61/kafka-websocket-server)
+
 ## Local build
 ```
 go build -o main .
