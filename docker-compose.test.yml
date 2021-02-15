@@ -2,13 +2,13 @@ version: "3.3"
 
 services:
   kafka-websocket-server:
-    image: pranavt61/kafka-websocket-server:0.1.0
+    build:
+      context: .
+      target: test
     ports:
       - "8080:8080"
     depends_on:
       - kafka
-    env_file:
-      - .env
 
   zookeeper:
     image: confluentinc/cp-zookeeper:5.0.1-1
@@ -41,4 +41,3 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_JMX_PORT: 9991
-
