@@ -17,6 +17,7 @@ docker run \
   -e KAFKA_WEBSOCKET_SERVER_TOPICS="blocks,transactions,logs"
   -e KAFKA_WEBSOCKET_SERVER_BROKER_URL="kafka:9092"
   -e KAFKA_WEBSOCKET_SERVER_PORT="8080"
+  -e KAFKA_WEBSOCKET_SERVER_PREFIX="/ws"
   kafka-websocket-server:latest
 ```
 
