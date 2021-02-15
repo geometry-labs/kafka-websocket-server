@@ -11,13 +11,16 @@ import (
 type KafkaWebsocketServer struct {
 	TopicChans map[string]chan *kafka.Message
 	Port       string
+	Prefix     string
 }
 
 func (ws *KafkaWebsocketServer) ListenAndServe() {
 
 	for t, c := range ws.TopicChans {
 
-		http.HandleFunc("/"+t, readAndBroadcastKafkaTopic(c))
+		endpoint_path := ws.Prefix + "/" + t
+
+		http.HandleFunc(endpoint_path, readAndBroadcastKafkaTopic(c))
 	}
 
 	log.Fatal(http.ListenAndServe(":"+ws.Port, nil))
