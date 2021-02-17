@@ -47,7 +47,7 @@ func TestKafkaTopicConsumer(t *testing.T) {
 			t.Logf("Failed to assert topic message value")
 			t.Fail()
 		}
-	case <-time.After(1 * time.Second):
+	case <-time.After(10 * time.Second):
 		t.Logf("Failed to receive message from kafka")
 		t.Fail()
 	}
