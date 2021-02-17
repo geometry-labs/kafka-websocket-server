@@ -9,9 +9,12 @@ import (
 
 func TestKafkaTopicConsumer(t *testing.T) {
 
+	topic_name := "test_topic"
+	broker_url := "kafka:29092"
+
 	// create test producer
 	go func() {
-		p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka:9092"})
+		p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": broker_url})
 		if err != nil {
 			t.Logf("Failed to connect to kafka broker")
 			t.Fail()
@@ -19,7 +22,7 @@ func TestKafkaTopicConsumer(t *testing.T) {
 
 		defer p.Close()
 
-		topic := "test_topic"
+		topic := topic_name
 		for {
 			p.Produce(&kafka.Message{
 				TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
@@ -33,9 +36,9 @@ func TestKafkaTopicConsumer(t *testing.T) {
 	topic_chan := make(chan *kafka.Message)
 
 	topic_consumer := KafkaTopicConsumer{
-		"test_topic",
+		topic_name,
 		topic_chan,
-		"kafka:9092",
+		broker_url,
 	}
 
 	go topic_consumer.ConsumeAndBroadcastTopics()
