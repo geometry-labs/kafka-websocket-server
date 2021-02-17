@@ -18,6 +18,8 @@ func main() {
 	port_env := os.Getenv("KAFKA_WEBSOCKET_SERVER_PORT")
 	prefix_env := os.Getenv("KAFKA_WEBSOCKET_SERVER_PREFIX")
 
+	log.Println("tesing CI")
+
 	if topics_env == "" {
 		log.Println("ERROR: required enviroment variable missing: WEBSOCKET_API_TOPICS")
 		return
