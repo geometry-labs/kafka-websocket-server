@@ -19,7 +19,7 @@ jobs:
         run: docker-compose -f docker-compose.test.yml ps
 
       - name: Check logs
-        run: docker-compose -f docker-compose.test.yml logs kafka-registration-websocket-server
+        run: docker-compose -f docker-compose.test.yml logs kafka-websocket-server
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
