@@ -23,5 +23,5 @@ jobs:
       - name: Check logs
         run: docker-compose -f docker-compose.test.yml logs kafka-websocket-server
 
-      - name: Check logs
+      - name: Run tests
         run: docker-compose -f docker-compose.test.yml run kafka-websocket-server go test ./.../ -v -timeout 15m
