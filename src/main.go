@@ -20,11 +20,11 @@ func main() {
 
 	if topics_env == "" {
 		log.Println("ERROR: required enviroment variable missing: WEBSOCKET_API_TOPICS")
-		return
+		os.Exit(1)
 	}
 	if broker_url_env == "" {
 		log.Println("ERROR: required enviroment variable missing: WEBSOCKET_API_BROKER_URL")
-		return
+		os.Exit(1)
 	}
 	if port_env == "" {
 		port_env = "8080"
