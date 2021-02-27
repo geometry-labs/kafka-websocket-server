@@ -17,6 +17,7 @@ func TestKafkaWebsocketServer(t *testing.T) {
 	websocket_server := KafkaWebsocketServer{
 		chans,
 		"8080",
+		"",
 	}
 
 	// Start websocket server

@@ -8,6 +8,7 @@ import (
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 
 	"kafka-websocket-server/consumer"
+	"kafka-websocket-server/health"
 	"kafka-websocket-server/websockets"
 )
 
@@ -17,6 +18,7 @@ func main() {
 	broker_url_env := os.Getenv("KAFKA_WEBSOCKET_SERVER_BROKER_URL")
 	port_env := os.Getenv("KAFKA_WEBSOCKET_SERVER_PORT")
 	prefix_env := os.Getenv("KAFKA_WEBSOCKET_SERVER_PREFIX")
+	health_port_env := os.Getenv("KAFKA_WEBSOCKET_SERVER_HEALTH_PORT")
 
 	if topics_env == "" {
 		log.Println("ERROR: required enviroment variable missing: WEBSOCKET_API_TOPICS")
@@ -31,6 +33,9 @@ func main() {
 	}
 	if prefix_env == "" {
 		prefix_env = ""
+	}
+	if health_port_env == "" {
+		health_port_env = "5001"
 	}
 
 	topic_names := strings.Split(topics_env, ",")
@@ -62,6 +67,9 @@ func main() {
 	// Start server
 	go websocket_server.ListenAndServe()
 	log.Printf("Websocket server listening on :%s%s/...", port_env, prefix_env)
+
+	// Start health server
+	go health.ListenAndServe(health_port_env, port_env, prefix_env, topic_names)
 
 	// Keep main thread alive
 	for {
