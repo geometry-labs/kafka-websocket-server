@@ -9,18 +9,18 @@ import (
 )
 
 type KafkaWebsocketServer struct {
-	TopicChans map[string]chan *kafka.Message
-	Port       string
-	Prefix     string
+	Broadcasters map[string]*TopicBroadcaster
+	Port         string
+	Prefix       string
 }
 
 func (ws *KafkaWebsocketServer) ListenAndServe() {
 
-	for t, c := range ws.TopicChans {
+	for t, b := range ws.Broadcasters {
 
 		endpoint_path := ws.Prefix + "/" + t
 
-		http.HandleFunc(endpoint_path, readAndBroadcastKafkaTopic(c))
+		http.HandleFunc(endpoint_path, readAndBroadcastKafkaTopic(b))
 	}
 
 	log.Fatal(http.ListenAndServe(":"+ws.Port, nil))
@@ -32,7 +32,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func readAndBroadcastKafkaTopic(topic_chan chan *kafka.Message) func(w http.ResponseWriter, r *http.Request) {
+func readAndBroadcastKafkaTopic(broadcaster *TopicBroadcaster) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
@@ -42,6 +42,14 @@ func readAndBroadcastKafkaTopic(topic_chan chan *kafka.Message) func(w http.Resp
 			return
 		}
 		defer c.Close()
+
+		// Add broadcaster
+		topic_chan := make(chan *kafka.Message)
+		id := broadcaster.AddWebsocketChannel(topic_chan)
+		defer func() {
+			// Remove broadcaster
+			broadcaster.RemoveWebsocketChannel(id)
+		}()
 
 		// Read for close
 		client_close_sig := make(chan bool)

@@ -10,12 +10,17 @@ import (
 
 func TestKafkaWebsocketServer(t *testing.T) {
 
-	chans := make(map[string]chan *kafka.Message)
+	topic_chan := make(chan *kafka.Message)
 
-	chans["data"] = make(chan *kafka.Message)
+	broadcasters := make(map[string]*TopicBroadcaster)
+	broadcasters["data"] = &TopicBroadcaster{
+		topic_chan,
+		make(map[BroadcasterID]chan *kafka.Message),
+	}
+	go broadcasters["data"].Broadcast()
 
 	websocket_server := KafkaWebsocketServer{
-		chans,
+		broadcasters,
 		"8080",
 		"",
 	}
@@ -29,7 +34,7 @@ func TestKafkaWebsocketServer(t *testing.T) {
 			msg := &(kafka.Message{})
 			msg.Value = []byte("Test Data")
 
-			chans["data"] <- msg
+			topic_chan <- msg
 
 			time.Sleep(1 * time.Second)
 		}
