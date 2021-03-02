@@ -39,27 +39,37 @@ func main() {
 	}
 
 	topic_names := strings.Split(topics_env, ",")
-	topic_chans := make(map[string]chan *kafka.Message)
+	broadcasters := make(map[string]*websockets.TopicBroadcaster)
 
 	for _, topic := range topic_names {
 		// Create channel
-		topic_chans[topic] = make(chan *kafka.Message)
+		topic_chan := make(chan *kafka.Message)
+
+		// Create broadcaster
+		broadcasters[topic] = &websockets.TopicBroadcaster{
+			topic_chan,
+			make(map[websockets.BroadcasterID]chan *kafka.Message),
+		}
 
 		// Create consumer
 		kafka_consumer := consumer.KafkaTopicConsumer{
 			topic,
-			topic_chans[topic],
+			topic_chan,
 			broker_url_env,
 		}
 
 		// Start consumer
 		go kafka_consumer.ConsumeAndBroadcastTopics()
-		log.Printf("Kafka consumer create for %s", topic)
+		log.Printf("Kafka consumer created for %s", topic)
+
+		// Start broadcaster
+		go broadcasters[topic].Broadcast()
+		log.Printf("Topic broadcaster created for %s", topic)
 	}
 
 	// Create server
 	websocket_server := websockets.KafkaWebsocketServer{
-		topic_chans,
+		broadcasters,
 		port_env,
 		prefix_env,
 	}
