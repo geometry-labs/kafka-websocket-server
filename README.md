@@ -29,3 +29,4 @@ docker run \
 | KAFKA_WEBSOCKET_SERVER_BROKER_URL | location of broker | NULL | True |
 | KAFKA_WEBSOCKET_SERVER_PORT | port to expose for websocket connections | "8080" | False |
 | KAFKA_WEBSOCKET_SERVER_PREFIX | prefix for websocket endpoints | "" | False |
+| KAFKA_WEBSOCKET_SERVER_HEALTH_PORT | port to expose for websocket health checks | "5001" | False |
