@@ -11,12 +11,16 @@ import (
 
 	"kafka-websocket-server/consumer"
 	"kafka-websocket-server/health"
+	"kafka-websocket-server/metrics"
 	"kafka-websocket-server/websockets"
 )
 
 func main() {
 
 	env := getEnvironment()
+
+	// Start Prometheus client
+	go metrics.StartPrometheusHttpServer(env.MetricsPort, env.NetworkName)
 
 	topic_names := strings.Split(env.Topics, ",")
 	broadcasters := make(map[string]*websockets.TopicBroadcaster)

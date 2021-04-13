@@ -6,6 +6,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+
+	"kafka-websocket-server/metrics"
 )
 
 type KafkaWebsocketServer struct {
@@ -43,6 +45,8 @@ func readAndBroadcastKafkaTopic(broadcaster *TopicBroadcaster) func(w http.Respo
 		}
 		defer c.Close()
 
+		metrics.Metrics["websockets_connected"].Inc()
+
 		// Add broadcaster
 		topic_chan := make(chan *kafka.Message)
 		id := broadcaster.AddWebsocketChannel(topic_chan)
@@ -69,6 +73,7 @@ func readAndBroadcastKafkaTopic(broadcaster *TopicBroadcaster) func(w http.Respo
 
 			// Broadcast
 			err = c.WriteMessage(websocket.TextMessage, msg.Value)
+			metrics.Metrics["websockets_bytes_written"].Add(float64(len(msg.Value)))
 			if err != nil {
 				break
 			}

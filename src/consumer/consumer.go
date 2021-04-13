@@ -2,6 +2,8 @@ package consumer
 
 import (
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+
+	"kafka-websocket-server/metrics"
 )
 
 type KafkaTopicConsumer struct {
@@ -28,6 +30,8 @@ func (k *KafkaTopicConsumer) ConsumeAndBroadcastTopics() {
 
 	for {
 		msg, err := consumer.ReadMessage(-1)
+		metrics.Metrics["kafka_messages_consumed"].Inc()
+
 		if err == nil {
 
 			// NOTE: use select statement for non-blocking channels
